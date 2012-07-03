@@ -25,7 +25,7 @@ def formatBoard():
   global rack
   rack = re.findall('[a-z]|[*]', sys.argv[1])
   
-  boardInput = open('board.txt').read().split()
+  boardInput = open('../resources/board.txt').read().split()
   row = []
   for rowInputString in boardInput:
     rowInputList = re.findall('[-]|DW|TW|DL|TL|[a-z]', rowInputString)
@@ -190,14 +190,14 @@ if __name__ == '__main__':
   start = time.time()
   dawg = Dawg()
   try:
-      dawg = pickle.load(open('save.p', 'rb'))
+      dawg = pickle.load(open('../resources/save.p', 'rb'))
   except:
     words = open("enable1.txt", 'rt').read().split()
     words.sort()
     for word in words:
       dawg.insert(word)
     dawg.finish()
-    pickle.dump(dawg, open('save.p', 'wb'))
+    pickle.dump(dawg, open('../resources/save.p', 'wb'))
 
 #  formatSpace() #creates rack, spaceSquareList
   
