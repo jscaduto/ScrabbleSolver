@@ -12,7 +12,6 @@ global dawg
 valueMap = {'A':1, 'B':4, 'C':4, 'D':2, 'E':1, 'F':4, 'G':3, 'H':3, 'I':1, 'J':10, 'K':5, 'L':2, 'M':4, 'N':2, 'O':1, 'P':4, 'Q':10, 'R':1, 'S':1, 'T':1, 'U':2, 'V':5, 'W':4, 'X':8, 'Y':3, 'Z':10, '*':0}
 rack = []  #list of tiles
 spaceSquareList = []
-crossCheckSet = Set()
 plays = {}
 boardHorizontal = []
 boardVertical = []
@@ -21,10 +20,11 @@ bestScore = 0
 bestPlay = 'no plays'
 global currentBoard
 
-def formatBoard():
+deg getRack():
   global rack
   rack = re.findall('[a-z]|[*]', sys.argv[1])
   
+def setUpBoard():
   boardInput = open('../resources/board.txt').read().split()
   row = []
   for rowInputString in boardInput:
@@ -73,6 +73,9 @@ def parseSquare(input):
   
   return square
 
+def findAnchorSquares():
+  #finds all anchor squares on board and create crossCheckSet for each of them
+  
 def findWords(row, rowPointer, rowString):
   global adjacentPlacedTileId
   
@@ -96,7 +99,7 @@ def findWords(row, rowPointer, rowString):
   if rowPointer.nextSquare != None:
     findWords(row, rowPointer.nextSquare, rowString)
   
-def LeftPart(partialWord, N, limit, square):
+def LeftPart(anchorSquare, N, limit, square):
   ExtendRight(partialWord, N, square)
   if limit > 0:
     for Eletter, Enode in N.edges.items():
@@ -104,34 +107,19 @@ def LeftPart(partialWord, N, limit, square):
         #insert tile at anchor square (pushing back the current leftPart --LP[])
         rack.remove(Eletter)
         #push LP back to the left one tile to make room for new tile to be placed at anchor square
-        shiftLPLeft(partialWord, Eletter)
+        Handler.shiftLPLeft(partialWord, Eletter)
         LeftPart(partialWord, Enode, limit-1, square)
         #remove tile from anchor space, push LP back to the right
         shiftLPRight(partialWord)
         rack.append(Eletter)
 
-def shiftLPLeft(leftPart, newTile):
-  rightTile = newTile
-  leftPart.reverse()
-  for square in leftPart:
-    tempTile = square.tile
-    square.tile = rightTile
-    rightTile = tempTile
-  leftPart.reverse()
-
-def shiftLPRight(leftPart):
-  leftTile = '-'
-  for square in leftPart:
-    tempTile = square.tile
-    square.tile = leftTile
-    leftTile = tempTile
 
 def ExtendRight(partialWord, N, square):
   if N.final and (square.tile == '-' or square.tile == '$'):
     addLegalMove(partialWord)
   if (square.tile == '-'):
     for Eletter, Enode in N.edges.items():
-      if Eletter in rack : #TODO: and (E.letter in crossCheckSet)
+      if Eletter in rack and Eletter in square.crossCheckSet: #TODO: and (E.letter in square.crossCheckSet)
         if square.nextSquare != None:
           rack.remove(Eletter)
           square.tile = Eletter
@@ -156,13 +144,10 @@ def addLegalMove(move):
       tallyPoints(move)
 
 def tallyPoints(move):
-  global bestScore
-  global bestPlay
-  
   score = 0
   word = ''
   wordBonus = 1
-  for placement in move:
+  for placement in play:
     if (placement.tile != '-' and placement.tile != '$'):
       word += placement.tile
       score += valueMap.get(placement.tile.upper()) * int(float(placement.letterBonus))
@@ -186,8 +171,7 @@ def sortMoves():
   for word, score in playList:
     print word, score
 
-if __name__ == '__main__':  
-  start = time.time()
+def getDawg():  
   dawg = Dawg()
   try:
       dawg = pickle.load(open('../resources/save.p', 'rb'))
@@ -198,28 +182,27 @@ if __name__ == '__main__':
       dawg.insert(word)
     dawg.finish()
     pickle.dump(dawg, open('../resources/save.p', 'wb'))
+  return dawg
 
-#  formatSpace() #creates rack, spaceSquareList
+if __name__ == '__main__':  
+  start = time.time()
+
+  dawg = getDawg()
+
+  board = Board.Board('WordWithFriends')
+  board = setUpBoard(board)
+
+  anchorSquaresHorz, anchorSquaresVert = findAnchorSqaures(board, dawg)
+
+  moves = []
+  moves.add(findWords(anchorSquaresHorz))
+  moves.add(findWords(anchorSquaresVert))
   
-  formatBoard()
-  for rowNum in range(0,15):
-    plays = {}
-    print '____ROW: ', rowNum
-    rowHead = boardHorizontal[rowNum]
-    currentBoard = boardHorizontal
-    findWords(list(), rowHead, '')
-    
+  moveToScore = {}
+  for move in moves:
+    moveToScore[move] = tallyPoints(move)
+
   print bestPlay
   print bestScore
 #    sortMoves()
-  for collumnNum in range(0,15):
-    plays = {}
-    print '____COL: ', collumnNum
-    collumnHead = boardVertical[collumnNum]
-    currentBoard = boardVertical
-    findWords(list(), collumnHead, '')
-#    sortMoves()  
-    
-  print bestPlay
-  print bestScore
   print time.time() - start
