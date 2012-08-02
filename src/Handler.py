@@ -4,9 +4,6 @@ import Board
 
 class Handler:
   
-  def Handler(self):
-    self.logger =
-
   #recursively shift tile LEFT one square at a time, until you hit the right-most square, then replace it with a blank ('-')
   def insertTileAtAnchorSquare(board, anchorSquare, partialWord, newTile):
     if not partialWord:
