@@ -7,11 +7,12 @@ class TestHandlerFunctions(unittest.TestCase):
     
   def test_insertTileAtAnchorSquare(self):
     #test partialWord length 0
+    handler = Handler.Handler()
     board = Board.Board(15,15)
     anchorSquare = board.grid[7][7]
     partialWord = []
     newTile = 't'
-    partialWord = Handler.insertTileAtAnchorSquare(board, anchorSquare, partialWord, newTile)
+    partialWord = handler.insertTileAtAnchorSquare(board, anchorSquare, partialWord, newTile)
     self.assertEqual(partialWord, ['t'])
     #test partialWord length 1
 

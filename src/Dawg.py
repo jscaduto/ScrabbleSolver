@@ -1,9 +1,3 @@
-'''
-Created on Jun 27, 2012
-
-@author: JS018234
-'''
-
 from DawgNode import *
 
 class Dawg:
